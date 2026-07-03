@@ -68,7 +68,6 @@ int OnInit()
    // Initialize Trade object
    trade.SetExpertMagicNumber(magicNumber);
    trade.SetDeviationInPoints(10);
-   trade.SetAsyncMode(false);
    
    // Initialize Symbol Info
    if (!symbolInfo.Name(symbolToTrade))
@@ -117,8 +116,8 @@ void OnTick()
       return;
    
    // Get market data
-   double bid = symbolInfo.Bid();
-   double ask = symbolInfo.Ask();
+   double bid = SymbolInfoDouble(symbolToTrade, SYMBOL_BID);
+   double ask = SymbolInfoDouble(symbolToTrade, SYMBOL_ASK);
    
    // Analyze market and place orders
    AnalyzeMarketAndTrade(bid, ask);
@@ -231,8 +230,7 @@ void ManageTrades()
 {
    for (int i = PositionsTotal() - 1; i >= 0; i--)
    {
-      ulong ticket = PositionGetTicket(i);
-      if (ticket == 0)
+      if (!PositionSelectByTicket(PositionGetTicket(i)))
          continue;
       
       if (PositionGetInteger(POSITION_MAGIC) != magicNumber)
@@ -245,10 +243,10 @@ void ManageTrades()
       double posPrice = PositionGetDouble(POSITION_PRICE_OPEN);
       double posSL = PositionGetDouble(POSITION_SL);
       
-      if (posType == POSITION_BUY)
-         UpdateBuyTrailingStop(ticket, posSL);
-      else if (posType == POSITION_SELL)
-         UpdateSellTrailingStop(ticket, posSL);
+      if (posType == POSITION_TYPE_BUY)
+         UpdateBuyTrailingStop(PositionGetInteger(POSITION_TICKET), posSL);
+      else if (posType == POSITION_TYPE_SELL)
+         UpdateSellTrailingStop(PositionGetInteger(POSITION_TICKET), posSL);
    }
 }
 
@@ -257,8 +255,13 @@ void ManageTrades()
 //+------------------------------------------------------------------+
 void UpdateBuyTrailingStop(ulong ticket, double currentSL)
 {
-   double bid = symbolInfo.Bid();
-   double profit = bid - PositionGetDouble(POSITION_PRICE_OPEN);
+   double bid = SymbolInfoDouble(symbolToTrade, SYMBOL_BID);
+   
+   if (!PositionSelectByTicket(ticket))
+      return;
+   
+   double posPrice = PositionGetDouble(POSITION_PRICE_OPEN);
+   double profit = bid - posPrice;
    double trailingStartProfit = buyStopTrailingStart * pointValue;
    
    if (profit >= trailingStartProfit)
@@ -267,7 +270,8 @@ void UpdateBuyTrailingStop(ulong ticket, double currentSL)
       
       if (newSL > currentSL)
       {
-         if (trade.PositionModify(ticket, newSL, PositionGetDouble(POSITION_TP)))
+         double currentTP = PositionGetDouble(POSITION_TP);
+         if (trade.PositionModify(ticket, newSL, currentTP))
          {
             Print("Buy position trailing stop updated. New SL: ", newSL);
          }
@@ -280,8 +284,13 @@ void UpdateBuyTrailingStop(ulong ticket, double currentSL)
 //+------------------------------------------------------------------+
 void UpdateSellTrailingStop(ulong ticket, double currentSL)
 {
-   double ask = symbolInfo.Ask();
-   double profit = PositionGetDouble(POSITION_PRICE_OPEN) - ask;
+   double ask = SymbolInfoDouble(symbolToTrade, SYMBOL_ASK);
+   
+   if (!PositionSelectByTicket(ticket))
+      return;
+   
+   double posPrice = PositionGetDouble(POSITION_PRICE_OPEN);
+   double profit = posPrice - ask;
    double trailingStartProfit = sellStopTrailingStart * pointValue;
    
    if (profit >= trailingStartProfit)
@@ -290,7 +299,8 @@ void UpdateSellTrailingStop(ulong ticket, double currentSL)
       
       if (newSL < currentSL)
       {
-         if (trade.PositionModify(ticket, newSL, PositionGetDouble(POSITION_TP)))
+         double currentTP = PositionGetDouble(POSITION_TP);
+         if (trade.PositionModify(ticket, newSL, currentTP))
          {
             Print("Sell position trailing stop updated. New SL: ", newSL);
          }
@@ -305,8 +315,7 @@ void DeleteExpiredOrders()
 {
    for (int i = OrdersTotal() - 1; i >= 0; i--)
    {
-      ulong ticket = OrderGetTicket(i);
-      if (ticket == 0)
+      if (!OrderSelect(OrderGetTicket(i)))
          continue;
       
       if (OrderGetInteger(ORDER_MAGIC) != magicNumber)
@@ -319,9 +328,9 @@ void DeleteExpiredOrders()
       
       if (TimeCurrent() - orderTime > pendingOrderExpiry)
       {
-         if (trade.OrderDelete(ticket))
+         if (trade.OrderDelete(OrderGetTicket(i)))
          {
-            Print("Expired pending order deleted. Ticket: ", ticket);
+            Print("Expired pending order deleted. Ticket: ", OrderGetTicket(i));
          }
       }
    }
@@ -335,8 +344,7 @@ int CountOpenTrades()
    int count = 0;
    for (int i = 0; i < PositionsTotal(); i++)
    {
-      ulong ticket = PositionGetTicket(i);
-      if (ticket == 0)
+      if (!PositionSelectByTicket(PositionGetTicket(i)))
          continue;
       
       if (PositionGetInteger(POSITION_MAGIC) != magicNumber)
@@ -358,8 +366,7 @@ int CountPendingOrders()
    int count = 0;
    for (int i = 0; i < OrdersTotal(); i++)
    {
-      ulong ticket = OrderGetTicket(i);
-      if (ticket == 0)
+      if (!OrderSelect(OrderGetTicket(i)))
          continue;
       
       if (OrderGetInteger(ORDER_MAGIC) != magicNumber)
