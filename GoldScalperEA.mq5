@@ -59,6 +59,8 @@ CSymbolInfo symbolInfo;
 datetime lastOrderTime = 0;
 double pointValue;
 int orderTicket = 0;
+int fastMAHandle = 0;
+int slowMAHandle = 0;
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                  |
@@ -77,6 +79,21 @@ int OnInit()
    }
    
    pointValue = symbolInfo.Point();
+   
+   // Create MA indicators
+   fastMAHandle = iMA(symbolToTrade, PERIOD_M5, fastMA, 0, MODE_SMA, PRICE_CLOSE);
+   if (fastMAHandle == INVALID_HANDLE)
+   {
+      Print("Error creating Fast MA indicator");
+      return INIT_FAILED;
+   }
+   
+   slowMAHandle = iMA(symbolToTrade, PERIOD_M5, slowMA, 0, MODE_SMA, PRICE_CLOSE);
+   if (slowMAHandle == INVALID_HANDLE)
+   {
+      Print("Error creating Slow MA indicator");
+      return INIT_FAILED;
+   }
    
    Print("=== Gold Scalper EA Initialized ===");
    Print("Symbol: ", symbolToTrade);
@@ -152,9 +169,18 @@ bool IsInTradingSession()
 //+------------------------------------------------------------------+
 void AnalyzeMarketAndTrade(double bid, double ask)
 {
-   // Get MA values
-   double fastMA_val = iMA(symbolToTrade, PERIOD_M5, fastMA, 0, MODE_SMA, PRICE_CLOSE, 0);
-   double slowMA_val = iMA(symbolToTrade, PERIOD_M5, slowMA, 0, MODE_SMA, PRICE_CLOSE, 0);
+   // Get MA values from handles
+   double fastMA_array[1];
+   double slowMA_array[1];
+   
+   if (CopyBuffer(fastMAHandle, 0, 0, 1, fastMA_array) <= 0)
+      return;
+   
+   if (CopyBuffer(slowMAHandle, 0, 0, 1, slowMA_array) <= 0)
+      return;
+   
+   double fastMA_val = fastMA_array[0];
+   double slowMA_val = slowMA_array[0];
    double close = iClose(symbolToTrade, PERIOD_M5, 0);
    
    if (fastMA_val == 0 || slowMA_val == 0)
@@ -405,6 +431,12 @@ bool IsTradeAllowed()
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
 {
+   if (fastMAHandle != INVALID_HANDLE)
+      IndicatorRelease(fastMAHandle);
+   
+   if (slowMAHandle != INVALID_HANDLE)
+      IndicatorRelease(slowMAHandle);
+   
    Print("=== Gold Scalper EA Deinitialized ===");
    Print("Deinitialization Reason: ", reason);
 }
