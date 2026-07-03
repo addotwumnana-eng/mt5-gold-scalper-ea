@@ -3,50 +3,53 @@
 //|                  High Win Rate Auto Pilot - 24/7 Trading         |
 //|              Optimized for 24-Hour Crypto Markets                |
 //+------------------------------------------------------------------+
-#property copyright "Copyright 2026"
+#property copyright "Copyright 2026 - BTC Scalper"
 #property link "https://github.com/addotwumnana-eng/mt5-gold-scalper-ea"
-#property version "1.0"
+#property version "1.0 - BTC 24/7"
 #property strict
-#property description "High Win Rate BTC Scalping EA with Buy/Sell Stop, Trailing, and Pending Order Management - 24/7"
+#property icon "💎"
+#property description "🚀 BTC SCALPER EA 24/7 - High Win Rate Bitcoin Scalping with Buy/Sell Stop, Trailing, and Pending Order Management - 24/7 CRYPTO TRADING"
 
 #include <Trade\Trade.mqh>
 #include <Trade\SymbolInfo.mqh>
 
 //--- Input Parameters
-input group "=== 24/7 Trading Mode ==="
-input bool enable24HourTrading = true;   // Enable 24/7 Trading (Crypto Markets)
-input bool enableLondonSession = false;  // Disable session filters
-input bool enableNewYorkSession = false; // Disable session filters
+input group "🚀 ===== BTC SCALPER EA 24/7 ===== 🚀"
+input bool enable24HourTrading = true;   // ✅ BITCOIN 24/7 TRADING MODE
 
-input group "=== Risk Management ==="
+input group "⏰ ===== 24/7 TRADING MODE ===== ⏰"
+input bool enableLondonSession = false;  // Disable - 24/7 mode
+input bool enableNewYorkSession = false; // Disable - 24/7 mode
+
+input group "💰 ===== RISK MANAGEMENT ===== 💰"
 input double lotSize = 0.01;                // Lot Size (BTC contracts)
 input double maxRiskPercent = 2.0;          // Max Risk % per Trade
 input int maxOpenTrades = 5;                // Maximum Open Trades
 input int maxPendingOrders = 10;            // Maximum Pending Orders
 
-input group "=== Pending Orders ==="
-input double bestDistance = 50.0;           // Best Distance for Pending Orders (points for BTC)
+input group "📦 ===== PENDING ORDERS ===== 📦"
+input double bestDistance = 50.0;           // Best Distance for Pending Orders (points)
 input int pendingOrderExpiry = 3600;        // Pending Order Expiry Time (seconds)
 input bool autoDeleteExpiredOrders = true;  // Auto Delete Expired Pending Orders
 
-input group "=== Buy Stop Settings ==="
+input group "📈 ===== BUY STOP SETTINGS ===== 📈"
 input double buyStopDistance = 100.0;       // Buy Stop Distance (points)
 input double buyStopTrailingStart = 150.0; // Trailing Start Point (points)
 input double buyStopTrailingStep = 30.0;   // Trailing Step Point (points)
 
-input group "=== Sell Stop Settings ==="
+input group "📉 ===== SELL STOP SETTINGS ===== 📉"
 input double sellStopDistance = 100.0;      // Sell Stop Distance (points)
 input double sellStopTrailingStart = 150.0;// Trailing Start Point (points)
 input double sellStopTrailingStep = 30.0;  // Trailing Step Point (points)
 
-input group "=== Take Profit & Stop Loss ==="
-input double takeProfitPoints = 200.0;      // Take Profit (points)
-input double stopLossPoints = 100.0;        // Stop Loss (points)
+input group "🎯 ===== TAKE PROFIT & STOP LOSS ===== 🎯"
+input double takeProfitPoints = 200.0;      // Take Profit (points) - BTC
+input double stopLossPoints = 100.0;        // Stop Loss (points) - BTC
 input bool useTrailingStop = true;          // Use Trailing Stop
 
-input group "=== EA Settings ==="
-input int magicNumber = 654321;             // Magic Number (different from Gold EA)
-input string symbolToTrade = "BTCUSD";      // Symbol to Trade
+input group "⚙️ ===== EA SETTINGS ===== ⚙️"
+input int magicNumber = 654321;             // Magic Number - BTC EA
+input string symbolToTrade = "BTCUSD";      // 🚀 BITCOIN SYMBOL
 input int fastMA = 9;                       // Fast Moving Average Period
 input int slowMA = 21;                      // Slow Moving Average Period
 
@@ -58,6 +61,11 @@ double pointValue;
 int orderTicket = 0;
 int fastMAHandle = 0;
 int slowMAHandle = 0;
+
+// ========== BTC SCALPER EA IDENTIFICATION ==========
+string eaName = "🚀 BTC SCALPER EA 24/7 🚀";
+string eaType = "BITCOIN CRYPTOCURRENCY SCALPER";
+string tradingMode = "24/7 CONTINUOUS TRADING";
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                  |
@@ -71,7 +79,8 @@ int OnInit()
    // Initialize Symbol Info
    if (!symbolInfo.Name(symbolToTrade))
    {
-      Print("Error: Symbol ", symbolToTrade, " not found!");
+      Print("ERROR: Symbol ", symbolToTrade, " not found!");
+      Print("This is the BTC SCALPER EA - Please use BTCUSD symbol!");
       return INIT_FAILED;
    }
    
@@ -81,24 +90,38 @@ int OnInit()
    fastMAHandle = iMA(symbolToTrade, PERIOD_M5, fastMA, 0, MODE_SMA, PRICE_CLOSE);
    if (fastMAHandle == INVALID_HANDLE)
    {
-      Print("Error creating Fast MA indicator");
+      Print("ERROR: Error creating Fast MA indicator");
       return INIT_FAILED;
    }
    
    slowMAHandle = iMA(symbolToTrade, PERIOD_M5, slowMA, 0, MODE_SMA, PRICE_CLOSE);
    if (slowMAHandle == INVALID_HANDLE)
    {
-      Print("Error creating Slow MA indicator");
+      Print("ERROR: Error creating Slow MA indicator");
       return INIT_FAILED;
    }
    
-   Print("=== BTC Scalper EA Initialized (24/7 Mode) ===");
-   Print("Symbol: ", symbolToTrade);
-   Print("Magic Number: ", magicNumber);
-   Print("Lot Size: ", lotSize);
-   Print("Take Profit: ", takeProfitPoints, " points");
-   Print("Stop Loss: ", stopLossPoints, " points");
-   Print("Trading Mode: 24/7 - All Hours");
+   // ========== BTC SCALPER IDENTIFICATION BANNER ==========
+   Print("");
+   Print("╔═══════════════���════════════════════════════════════════╗");
+   Print("║          🚀 BTC SCALPER EA 24/7 STARTED 🚀            ║");
+   Print("╠════════════════════════════════════════════════════════╣");
+   Print("║ EA Name: ", eaName);
+   Print("║ Type: ", eaType);
+   Print("║ Mode: ", tradingMode);
+   Print("╠════════════════════════════════════════════════════════╣");
+   Print("║ Symbol: BTCUSD (BITCOIN)");
+   Print("║ Magic Number: 654321 (BTC EA)");
+   Print("║ Lot Size: ", lotSize, " BTC contracts");
+   Print("║ Max Risk: ", maxRiskPercent, "%");
+   Print("║ Take Profit: ", takeProfitPoints, " points (BTC)");
+   Print("║ Stop Loss: ", stopLossPoints, " points (BTC)");
+   Print("╠════════════════════════════════════════════════════════╣");
+   Print("║ Trading Hours: 24/7 - ALL HOURS");
+   Print("║ Trading Days: 24/7 - INCLUDING WEEKENDS");
+   Print("║ Status: ACTIVE - Ready to Trade Bitcoin!");
+   Print("╚════════════════════════════════════════════════════════╝");
+   Print("");
    
    return INIT_SUCCEEDED;
 }
@@ -186,11 +209,11 @@ void PlaceBuyStopOrders(double bid, double ask)
    if (trade.BuyStop(lotSize, buyStopPrice, symbolToTrade, sl, tp))
    {
       lastOrderTime = TimeCurrent();
-      Print("BTC Buy Stop Order Placed at: ", buyStopPrice, " TP: ", tp, " SL: ", sl);
+      Print("🚀 BTC BUY STOP Order Placed @ ", buyStopPrice, " | TP: ", tp, " | SL: ", sl);
    }
    else
    {
-      Print("Failed to place BTC Buy Stop Order. Error: ", GetLastError());
+      Print("❌ BTC BUY STOP Failed. Error: ", GetLastError());
    }
 }
 
@@ -211,11 +234,11 @@ void PlaceSellStopOrders(double bid, double ask)
    if (trade.SellStop(lotSize, sellStopPrice, symbolToTrade, sl, tp))
    {
       lastOrderTime = TimeCurrent();
-      Print("BTC Sell Stop Order Placed at: ", sellStopPrice, " TP: ", tp, " SL: ", sl);
+      Print("🚀 BTC SELL STOP Order Placed @ ", sellStopPrice, " | TP: ", tp, " | SL: ", sl);
    }
    else
    {
-      Print("Failed to place BTC Sell Stop Order. Error: ", GetLastError());
+      Print("❌ BTC SELL STOP Failed. Error: ", GetLastError());
    }
 }
 
@@ -269,7 +292,7 @@ void UpdateBuyTrailingStop(ulong ticket, double currentSL)
          double currentTP = PositionGetDouble(POSITION_TP);
          if (trade.PositionModify(ticket, newSL, currentTP))
          {
-            Print("BTC Buy position trailing stop updated. New SL: ", newSL);
+            Print("🚀 BTC Buy Trailing Stop Updated. New SL: ", newSL);
          }
       }
    }
@@ -298,7 +321,7 @@ void UpdateSellTrailingStop(ulong ticket, double currentSL)
          double currentTP = PositionGetDouble(POSITION_TP);
          if (trade.PositionModify(ticket, newSL, currentTP))
          {
-            Print("BTC Sell position trailing stop updated. New SL: ", newSL);
+            Print("🚀 BTC Sell Trailing Stop Updated. New SL: ", newSL);
          }
       }
    }
@@ -326,7 +349,7 @@ void DeleteExpiredOrders()
       {
          if (trade.OrderDelete(OrderGetTicket(i)))
          {
-            Print("Expired BTC pending order deleted. Ticket: ", OrderGetTicket(i));
+            Print("🚀 Expired BTC Pending Order Deleted. Ticket: ", OrderGetTicket(i));
          }
       }
    }
@@ -383,13 +406,13 @@ bool IsTradeAllowed()
 {
    if (!TerminalInfoInteger(TERMINAL_TRADE_ALLOWED))
    {
-      Print("Trading not allowed by terminal");
+      Print("❌ Trading not allowed by terminal");
       return false;
    }
    
    if (!AccountInfoInteger(ACCOUNT_TRADE_ALLOWED))
    {
-      Print("Trading not allowed for account");
+      Print("❌ Trading not allowed for account");
       return false;
    }
    
@@ -407,6 +430,9 @@ void OnDeinit(const int reason)
    if (slowMAHandle != INVALID_HANDLE)
       IndicatorRelease(slowMAHandle);
    
-   Print("=== BTC Scalper EA Deinitialized ===");
-   Print("Deinitialization Reason: ", reason);
+   Print("");
+   Print("╔════════════════════════════════════════════════════════╗");
+   Print("║        🚀 BTC SCALPER EA 24/7 DEINITIALIZED 🚀        ║");
+   Print("╚════════════════════════════════════════════════════════╝");
+   Print("");
 }
